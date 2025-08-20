@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <title>Food Blog</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.6.12/dist/vue.js"></script>
+    <link rel="preconnect" href="https://fonts.gstatic.com">
+    <link href="https://fonts.googleapis.com/css2?family=Sacramento&display=swap" rel="stylesheet">
+    <style>
+        * {
+            font-family:Arial, Helvetica, sans-serif;
+        }
+        #leftside {
+            float:left;
+            width: 30%;
+            min-height: 1200px;
+            background-color:rgb(77, 192, 154);
+        }
+        #rightside {
+            float:left;
+            width: 70%;
+            min-height: 1200px;
+            background-color:rgb(238, 226, 192);
+            position:relative;
+        }
+        #container {
+            background-color:rgba(255, 255, 255, 0.85);
+            position: absolute;
+            top: 15%;
+            left: 15%;
+            min-width: 1100px;
+            min-height: 1050px;
+            border-radius: 0.7em;
+        }
+        header {
+            height: 50px;
+            background-color:rgba(231, 229, 229, 0.5);
+            font-size: 2.75em;
+            padding:0.5em;
+            color:rgb(216, 150, 7);
+        }
+        header span {
+            font-family: 'Sacramento', cursive;
+        }
+        main {
+            position: relative;
+        }
+        main h2 {
+            position: absolute;
+            left: 20%;
+            top: 30px;
+            margin: 25px 0 200px 50px;
+            color:rgb(60, 190, 160);
+            text-transform: uppercase;
+        }
+        main #photos img {
+            margin: 0.75em;
+            border: 0.85em solid rgb(255, 255, 255);
+        }
+        section#blogposts {
+            position: absolute;
+            left: 20%;
+            top: 70px;
+            padding: 50px;
+        }
+        main .post {
+            margin: 25px;
+            padding: 25px;
+            border: 2px solid rgba(83, 78, 58, 0.6);
+            border-radius: 0.5em;
+            position: relative;
+        }
+        footer {
+            position: absolute;
+            bottom: 0;
+            height: 50px;
+            width: 100%;
+            text-align: center;
+            font-size: 0.85em;
+        }
+        
+        /* NEW STYLES FOR PROFILE FEATURES */
+        .author {
+            font-weight: bold;
+            color: rgb(60, 190, 160);
+            cursor: pointer;
+        }
+        .profile-img {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            vertical-align: middle;
+            margin-right: 8px;
+            cursor: pointer;
+            object-fit: cover;
+        }
+        .modal-overlay {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 1000;
+        }
+        .modal-content {
+            background-color: white;
+            padding: 25px;
+            border-radius: 8px;
+            box-shadow: 0 4px 15px rgba(0, 0, 0, 0.2);
+            max-width: 400px;
+            width: 90%;
+            position: relative;
+        }
+        .modal-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        .modal-profile-img {
+            width: 70px;
+            height: 70px;
+            border-radius: 50%;
+            margin-right: 15px;
+            object-fit: cover;
+        }
+        .author-info h3 {
+            margin: 0 0 5px 0;
+            color: rgb(60, 190, 160);
+        }
+        .foodie-level {
+            font-style: italic;
+            color: #777;
+            margin-bottom: 5px;
+        }
+        .bio {
+            line-height: 1.5;
+            color: #444;
+        }
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #999;
+        }
+        .close-btn:hover {
+            color: #333;
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <aside id="leftside"></aside>
+        <aside id="rightside"></aside>
+        <div id="container">
+            <header><span>Food Blog</span></header>
+
+            <main>
+                <aside id="photos">
+                    <img src="images/chili.jpg" alt="White Chicken Chili" width="180">
+                </aside>
+                <h2>Comments</h2>
+                
+                <section id="blogposts">
+                    <div class="post" v-for="comment in comments" :key="comment.id">
+                        <!-- Profile image with v-bind and click handler -->
+                        <img 
+                            :src="profilePlaceholder" 
+                            :alt="comment.author + ' profile image'" 
+                            class="profile-img"
+                            @click="showAuthor(comment.author)"
+                        >
+                        <span class="author" @click="showAuthor(comment.author)">{{ comment.author }}</span> — 
+                        <span class="date">{{ comment.date }}</span>
+                        <span class="reply">REPLY</span>
+                        <p>{{ comment.content }}</p>
+                    </div>
+                </section>
+            </main>
+
+            <footer>
+                &copy; Copyright FOOD BLOG
+            </footer>
+        </div>
+
+        <!-- Floating box modal -->
+        <div class="modal-overlay" v-if="showModal" @click.self="closeModal">
+            <div class="modal-content">
+                <button class="close-btn" @click="closeModal">&times;</button>
+                <div class="modal-header">
+                    <img :src="profilePlaceholder" alt="Profile image" class="modal-profile-img">
+                    <div class="author-info">
+                        <h3>{{ currentAuthor.name }}</h3>
+                        <div class="foodie-level">{{ currentAuthor.level }}</div>
+                    </div>
+                </div>
+                <div class="bio">
+                    {{ currentAuthor.bio }}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        new Vue({
+            el: '#app',
+            data: {
+                profilePlaceholder: 'data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSIyNCIgaGVpZ2h0PSIyNCIgdmlld0JveD0iMCAwIDI0IDI0IiBmaWxsPSJub25lIiBzdHJva2U9ImN1cnJlbnRDb2xvciIgc3Ryb2tlLXdpZHRoPSIyIiBzdHJva2UtbGluZWNhcD0icm91bmQiIHN0cm9rZS1saW5lam9pbj0icm91bmQiIGNsYXNzPSJmZWF0aGVyIGZlYXRoZXItdXNlciI+PHBhdGggZD0iTTIwIDIxdi0yYTQgNCAwIDAgMC00LTRINGE0IDQgMCAwIDAtNCA0djIiPjwvcGF0aD48Y2lyY2xlIGN4PSIxMiIgY3k9IjciIHI9IjQiPjwvY2lyY2xlPjwvc3ZnPg==',
+                showModal: false,
+                currentAuthor: {},
+                authors: {
+                    'Brianna': {
+                        name: 'Brianna',
+                        level: 'Gourmet Foodie',
+                        bio: 'Brianna is a passionate home cook who loves experimenting with flavors from around the world. She believes that good food brings people together and creates lasting memories.'
+                    },
+                    'LINH': {
+                        name: 'LINH',
+                        level: 'Master Chef',
+                        bio: 'LINH brings traditional family recipes with a modern twist. Cooking is her way of expressing creativity and sharing love with others.'
+                    },
+                    'CATHERINE LEONARDO': {
+                        name: 'CATHERINE LEONARDO',
+                        level: 'Recipe Innovator',
+                        bio: 'CATHERINE enjoys transforming classic dishes into healthier versions without compromising taste. Her kitchen is always filled with fresh ingredients and new ideas.'
+                    },
+                    'KALI': {
+                        name: 'KALI',
+                        level: 'Culinary Explorer',
+                        bio: 'KALI loves exploring different cuisines and techniques. From street food to fine dining, she appreciates the stories and cultures behind every dish.'
+                    }
+                },
+                comments: [
+                    {
+                        id: 1,
+                        author: 'Brianna',
+                        date: 'February 18, 2021 @ 3:30 pm',
+                        content: 'Was amazing! My Walmart didn\'t have coriander in stock and didn\'t have ground cumin. I used serrano instead of jalapeño. It was just like my favorite tortilla soup from BJs. I am sending this recipe to my family. I want everyone to try it!'
+                    },
+                    {
+                        id: 2,
+                        author: 'LINH',
+                        date: 'February 15, 2021 @ 9:46 am',
+                        content: 'I just made this soup today and it\'s so tasty! didn\'t have corn at home but still turned out very good. It\'s a winner! I made beef chili for my parents; but since my dad has gout he can\'t eat beef; this white chicken chili is perfect for him. Thank you Lisa!'
+                    },
+                    {
+                        id: 3,
+                        author: 'CATHERINE LEONARDO',
+                        date: 'February 13, 2021 @ 12:58 pm',
+                        content: 'I LOVE this White Chicken Chili! You are right, it is satiating meal—delicious with toasted bread. Refreshingly different taste than any chicken chili I\'ve made in the past. I made it exactly as written and added some chopped zucchini, carrots, and celery. Instead of shredding the chicken, I chopped it into small pieces. It freezes very well. Will be an all-time favorite, for sure.'
+                    },
+                    {
+                        id: 4,
+                        author: 'KALI',
+                        date: 'February 13, 2021 @ 11:31 am',
+                        content: 'This recipe is dynamite! My partner usually won\'t eat beans but he finished the whole pot (darn was hoping to have some for leftovers haha). This is crowd-pleaser that I am going to add to my regular recipe rotation. Thanks so much, Lisa!'
+                    }
+                ]
+            },
+            methods: {
+                showAuthor(authorName) {
+                    this.currentAuthor = this.authors[authorName] || { 
+                        name: authorName, 
+                        level: 'Food Enthusiast', 
+                        bio: 'This author loves good food and sharing culinary experiences with others.' 
+                    };
+                    this.showModal = true;
+                },
+                closeModal() {
+                    this.showModal = false;
+                }
+            }
+        });
+    </script>
+</body>
+</html>
